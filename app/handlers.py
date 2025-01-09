@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 from aiogram import types, Router, F
 from aiogram.filters.command import CommandStart
@@ -22,14 +23,14 @@ async def cmd_start(message: types.Message):
         reply_markup=kb.main,
     )
 
-@router.message(F.text == 'Установить напоминание')
+@router.message(F.text == 'Установить напоминание 📆')
 async def start_set_reminder(message: types.Message, state: FSMContext):
     await state.set_state(ReminderStates.waiting_for_name)
     await message.answer("Введите имя кого хотите добавить", reply_markup=clear)
 
 @router.message(ReminderStates.waiting_for_name)
 async def enter_name(message: types.Message, state: FSMContext):
-    if message.text.lower() == "отмена":
+    if message.text.lower() == "отмена❌":
         await state.clear()
         await message.answer("Установка напоминания отменена.", reply_markup=kb.main)
         return
@@ -40,7 +41,7 @@ async def enter_name(message: types.Message, state: FSMContext):
 
 @router.message(ReminderStates.waiting_for_birthday)
 async def enter_birthday(message: types.Message, state: FSMContext):
-    if message.text.lower() == "отмена":
+    if message.text.lower() == "отмена❌":
         await state.clear()
         await message.answer("Установка напоминания отменена.", reply_markup=kb.main)
         return
@@ -72,17 +73,17 @@ async def enter_birthday(message: types.Message, state: FSMContext):
 
 
 
-@router.message(F.text.casefold() == 'отмена'.casefold())
+@router.message(F.text.casefold() == 'отмена❌'.casefold())
 async def cancel_anywhere(message: types.Message, state: FSMContext):
     if await state.get_state():
         await state.clear()
         await message.answer("Действие отменено.", reply_markup=kb.main)
     else:
-        await message.answer("Вы не находитесь в процессе настройки.", reply_markup=kb.main)
+        await message.answer("Вы не находитесь в процессе настройки ⚙️.", reply_markup=kb.main)
 
 
 
-@router.message(F.text == 'следующий др')
+@router.message(F.text == 'следующий др ➡️')
 async def info(message: types.Message):
     now = datetime.now()
     user_id = str(message.from_user.id)
@@ -121,42 +122,62 @@ async def info(message: types.Message):
 
 
 
-@router.message(F.text.casefold() == 'настройки'.casefold())
+@router.message(F.text.casefold() == 'настройки ⚙️'.casefold())
 async def settings(message: types.Message):
-    await message.answer("настройки", reply_markup=kb.settings)
+    await message.answer("настройки ⚙️", reply_markup=kb.settings)
 
-@router.message(F.text.casefold() == 'изменить интервал'.casefold())
+@router.message(F.text.casefold() == 'изменить интервал 🗓'.casefold())
 async def settings_interval(message: types.Message, state: FSMContext):
-    if message.text.lower() == "отмена":
+    if message.text.lower() == "отмена❌":
         await state.clear()
         await message.answer("Установка интервала отменено.", reply_markup=kb.main)
         return
     await state.set_state(ReminderStates.waiting_for_name_settings)
-    await message.answer("Введите имя для кого хотите изменить интервал", reply_markup=clear)
+    await message.answer("Введите имя для кого хотите изменить интервал 🗓", reply_markup=clear)
 
 @router.message(ReminderStates.waiting_for_name_settings)
 async def enter_name(message: types.Message, state: FSMContext):
-    if message.text.lower() == "отмена":
+    if message.text.lower() == "отмена❌":
         await state.clear()
         await message.answer("Изменение интервала отменено.", reply_markup=kb.main)
         return
 
-    await state.update_data(name=message.text)
+    name_to_check = message.text.strip()  # Имя, которое ввел пользователь
+
+    # Проверяем, существует ли человек с таким именем в базе данных
+    user_exists = False
+    for user_id, user_info in reminders.items():
+        for reminder in user_info["reminders"]:
+            if reminder["name"].lower() == name_to_check.lower():  # Сравниваем имена без учета регистра
+                user_exists = True
+                break
+        if user_exists:
+            break
+
+    if not user_exists:
+        # Если такого имени нет в базе
+        await message.answer("Пользователь с таким именем не существует в базе данных.", reply_markup=kb.main)
+        return
+
+    # Сохраняем имя пользователя в состоянии для дальнейшего использования
+    await state.update_data(name=name_to_check)
+
+    # Переходим к следующему шагу (ввод интервалов)
     await state.set_state(ReminderStates.waiting_for_interval_settings)
-    await message.answer("Введите интервал на который хотите изменить в днях.\n"
+    await message.answer("Введите интервалы через запятую.\n"
                          "Пример: 1, 7, 30\n"
-                         "Это изменит интервал так что оповещения придут за 1, 7, 30 дней")
+                         "Это изменит интервал так, что оповещения придут за 1, 7, 30 дней")
 
 @router.message(ReminderStates.waiting_for_interval_settings)
 async def enter_interval(message: types.Message, state: FSMContext):
-    if message.text.lower() == "отмена":
+    if message.text.lower() == "отмена❌":
         await state.clear()
         await message.answer("Изменение интервала отменено.", reply_markup=kb.main)
         return
 
     try:
         user_interval_str = str(message.text)
-        user_interval = [item.strip() for item in user_interval_str.split(",")] #нужно превращать строки в числа перед добавлением в список
+        user_interval = [int(item.strip()) for item in user_interval_str.split(",")] #нужно превращать строки в числа перед добавлением в список
         user_data = await state.get_data()
 
         # Сохраняем напоминание
@@ -164,23 +185,43 @@ async def enter_interval(message: types.Message, state: FSMContext):
         if user_id not in reminders:
             reminders[user_id] = {"reminders": []}
 
-        reminders[user_id]["reminders"].append({
-            "name": user_data["name"],
-            "intervals": user_interval["intervals"]
-        })
+        # Ищем существующее напоминание для данного пользователя
+        for reminder in reminders[user_id]["reminders"]:
+            if reminder["name"] == user_data["name"]:
+                # Обновляем интервалы
+                reminder["intervals"] = user_interval  # Просто присваиваем новый список интервалов
+                break
+
+        # Сохраняем изменения в базе данных
+        save_reminders(reminders)
 
         # Завершаем процесс и возвращаем главную клавиатуру
-        save_reminders(reminders)
         await state.clear()
         await message.answer(
             f"Интервал для {user_data['name']} на {user_interval_str} успешно изменён!",
             reply_markup=kb.main
         )
     except ValueError:
-        await message.answer("Ошибка: введите интервал в формате [1, 7, 30]")
+        await message.answer("Ошибка: введите интервал в формате: 1, 7, 30")
 
 
-@router.message(F.text.casefold() == 'о нас'.casefold())
+# Вывести всю базу данных 📂
+@router.message(F.text.casefold() == 'Вывести всю базу данных 📂'.casefold())
+async def settings_interval(message: types.Message):
+
+    user_id = str(message.from_user.id)
+    if user_id not in reminders:
+        reminders[user_id] = {"reminders": []}
+        output_database = "у вас ещё нет базы данных"
+    else:
+        user_data = reminders.get(user_id, {})
+        output_database = json.dumps(user_data, ensure_ascii=False, indent=4)
+
+    await message.answer(output_database, reply_markup=kb.main)
+
+
+
+@router.message(F.text.casefold() == 'о нас 👤'.casefold())
 async def about_us(message: types.Message):
     await message.answer(
         "Разработчик: Вавилин Сергей\n"

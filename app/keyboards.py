@@ -1,20 +1,21 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 main = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Установить напоминание')],
-    [KeyboardButton(text='настройки'), KeyboardButton(text='следующий др')]
+    [KeyboardButton(text='Установить напоминание 📆')],
+    [KeyboardButton(text='настройки ⚙️'), KeyboardButton(text='следующий др ➡️')]
 ],
     resize_keyboard=True,
     input_field_placeholder="Выберите пункт меню"
 )
 clear = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='Отмена')],
+    [KeyboardButton(text='отмена❌')],
 ], resize_keyboard=True,
 )
 settings = ReplyKeyboardMarkup(keyboard=[
-    [KeyboardButton(text='изменить интервал')],
-    [KeyboardButton(text='о нас')],
-    [KeyboardButton(text='Отмена')]
+    [KeyboardButton(text='изменить интервал 🗓')],
+    [KeyboardButton(text='Вывести всю базу данных 📂')],
+    [KeyboardButton(text='о нас 👤')],
+    [KeyboardButton(text='отмена❌')]
 ],
     resize_keyboard=True,
     input_field_placeholder="Настройки..."
