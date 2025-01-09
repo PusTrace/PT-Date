@@ -64,7 +64,8 @@ async def bot_health_check():
         for chat_id in chat_ids:
             await bot.send_message(
                 chat_id,
-                text="admin check health"
+                text="admin check health\n"
+                     "/start\n"
             )
     except Exception as e:
         print(f"Ошибка отправки тестового сообщения: {e}")
