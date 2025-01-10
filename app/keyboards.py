@@ -14,6 +14,7 @@ clear = ReplyKeyboardMarkup(keyboard=[
 settings = ReplyKeyboardMarkup(keyboard=[
     [KeyboardButton(text='изменить интервал 🗓')],
     [KeyboardButton(text='Вывести всю базу данных 📂')],
+    [KeyboardButton(text='удалить запись 🔒')],
     [KeyboardButton(text='о нас 👤')],
     [KeyboardButton(text='отмена❌')]
 ],

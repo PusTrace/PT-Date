@@ -6,3 +6,4 @@ class ReminderStates(StatesGroup):
     settings = State()
     waiting_for_name_settings = State()
     waiting_for_interval_settings = State()
+    waiting_for_name_delete = State()
